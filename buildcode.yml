@@ -1,10 +1,11 @@
+version: 0.2
 phases:
   pre_build:
     commands:
       # Step 1: Clone the code repository from GitHub
       - echo "Cloning code repository from GitHub..."
       - |
-        if ! git clone https://github.com/<your-github-repo>.git; then
+        if ! git clone https://github.com/Packiaraj85/Test.git; then
           echo "Git clone failed. Exiting..."
           exit 1
         fi
@@ -14,7 +15,7 @@ phases:
       - |
         RETRY_COUNT=3
         for i in $(seq 1 $RETRY_COUNT); do
-          INSTANCE_ID=$(aws ec2 run-instances --image-id <your-windows-server-ami-id> --instance-type t2.medium --key-name <your-key-pair> --security-group-ids <your-security-group> --subnet-id <your-subnet-id> --query 'Instances[0].InstanceId' --output text)
+          INSTANCE_ID=$(aws ec2 run-instances --image-id ami-0324a83b82023f0b3 --instance-type t2.micro --key-name keypass.pem --security-group-ids sg-0de0de45d39c0c44f --subnet-id subnet-0c4d6b9093a721740 --query 'Instances[0].InstanceId' --output text)
           if [ -n "$INSTANCE_ID" ]; then
             echo "Instance launched successfully: $INSTANCE_ID"
             break
@@ -47,12 +48,12 @@ phases:
       # Step 4: Copy the cloned code to the Windows Server instance with retries
       - echo "Copying code to the Windows Server..."
       - |
-        if ! aws s3 cp ./<your-github-repo> s3://$CODEPIPELINE_ARTIFACT_BUCKET/cloned-repo/ --recursive; then
+        if ! aws s3 cp ./Test s3://testbuildcode/cloned-repo/ --recursive; then
           echo "Failed to upload code to S3. Exiting..."
           exit 1
         fi
       - |
-        if ! aws ssm send-command --document-name "AWS-RunPowerShellScript" --targets "[{\"Key\":\"InstanceIds\",\"Values\":[\"$INSTANCE_ID\"]}]" --parameters "{\"commands\":[\"aws s3 sync s3://$CODEPIPELINE_ARTIFACT_BUCKET/cloned-repo/ C:\\build\"],\"executionTimeout\":[\"3600\"]}"; then
+        if ! aws ssm send-command --document-name "AWS-RunPowerShellScript" --targets "[{\"Key\":\"InstanceIds\",\"Values\":[\"$INSTANCE_ID\"]}]" --parameters "{\"commands\":[\"aws s3 sync s3://testbuildcode/cloned-repo/ C:\\build\"],\"executionTimeout\":[\"3600\"]}"; then
           echo "Failed to copy code from S3 to Windows Server. Exiting..."
           exit 1
         fi
@@ -75,7 +76,7 @@ phases:
       - |
         RETRY_COUNT=3
         for i in $(seq 1 $RETRY_COUNT); do
-          if aws ssm send-command --document-name "AWS-RunPowerShellScript" --targets "[{\"Key\":\"InstanceIds\",\"Values\":[\"$INSTANCE_ID\"]}]" --parameters "{\"commands\":[\"aws s3 sync C:\\\\build s3://<your-artifacts-bucket>/build-output/\"]}"; then
+          if aws ssm send-command --document-name "AWS-RunPowerShellScript" --targets "[{\"Key\":\"InstanceIds\",\"Values\":[\"$INSTANCE_ID\"]}]" --parameters "{\"commands\":[\"aws s3 sync C:\\\\build s3://testbuildcode/build-output/\"]}"; then
             echo "Artifacts uploaded successfully."
             break
           elif [ $i -eq $RETRY_COUNT ]; then
