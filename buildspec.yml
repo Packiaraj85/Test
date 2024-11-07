@@ -16,7 +16,7 @@ phases:
       - |
         RETRY_COUNT=3
         for i in $(seq 1 $RETRY_COUNT); do
-          INSTANCE_ID=$(aws ec2 run-instances --image-id ami-0324a83b82023f0b3 --instance-type t2.micro --key-name keypass --security-group-ids sg-0de0de45d39c0c44f --subnet-id subnet-0c4d6b9093a721740 --query 'Instances[0].InstanceId' --output text)
+          INSTANCE_ID=$(aws ec2 run-instances --image-id  ami-0324a83b82023f0b3 --instance-type t2.micro --key-name keypass.pem --security-group-ids sg-0de0de45d39c0c44f --subnet-id subnet-0c4d6b9093a721740 --query 'Instances[0].InstanceId' --output text)
           if [ -n "$INSTANCE_ID" ]; then
             echo "Instance launched successfully: $INSTANCE_ID"
             break
