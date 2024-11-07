@@ -5,18 +5,18 @@ phases:
     commands:
       # Step 1: Clone the code repository from GitHub
       - echo "Cloning code repository from GitHub..."
-      - |
-        if ! git clone https://github.com/Packiaraj85/Test.git; then
-          echo "Git clone failed. Exiting..."
-          exit 1
-        fi
+      #- |
+      #  if ! git clone https://github.com/Packiaraj85/Test.git; then
+      #    echo "Git clone failed. Exiting..."
+      #    exit 1
+      #  fi
 
       # Step 2: Launch a Windows Server EC2 instance with retries
       - echo "Launching Windows Server EC2 instance..."
       - |
         RETRY_COUNT=3
         for i in $(seq 1 $RETRY_COUNT); do
-          INSTANCE_ID=$(aws ec2 run-instances --image-id ami-0324a83b82023f0b3 --instance-type t2.micro --key-name keypass.pem --security-group-ids sg-0de0de45d39c0c44f --subnet-id subnet-0c4d6b9093a721740 --query 'Instances[0].InstanceId' --output text)
+          INSTANCE_ID=$(aws ec2 run-instances --image-id ami-0324a83b82023f0b3 --instance-type t2.micro --key-name keypass --security-group-ids sg-0de0de45d39c0c44f --subnet-id subnet-0c4d6b9093a721740 --query 'Instances[0].InstanceId' --output text)
           if [ -n "$INSTANCE_ID" ]; then
             echo "Instance launched successfully: $INSTANCE_ID"
             break
@@ -49,7 +49,7 @@ phases:
       # Step 4: Copy the cloned code to the Windows Server instance with retries
       - echo "Copying code to the Windows Server..."
       - |
-        if ! aws s3 cp ./Test s3://testbuildcode/cloned-repo/ --recursive; then
+        if ! aws s3 cp Test s3://testbuildcode/cloned-repo/ --recursive; then
           echo "Failed to upload code to S3. Exiting..."
           exit 1
         fi
